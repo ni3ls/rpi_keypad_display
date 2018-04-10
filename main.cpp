@@ -1,9 +1,9 @@
 #include <iostream>
-#include <string>
 #include <unistd.h>
-#include "GPIO.h"
+#include "io.h"
 #include "checkPassCode.h"
 #include "keypad.h"
+#include <wiringPi.h>
 
 // Keypad
 #include <linux/input.h>
@@ -18,32 +18,61 @@ using namespace std;
 atomic<bool> stopTimer;
 int ts;
 int key_timeout;
+
 string pin_code;
 string hidden_pin;
 
-void keyTimeout() {
-    Config config;
-    loadConfig(config);
+void setToIdle() {
+    pin_code = "";
+    hidden_pin = "";
+    displayLcd("Welcome!",0);
+}
 
+void keyTimeout() {
     ts = 0;
     while(true) {
         while(!stopTimer) {
             ts += 1;
-            sleep(1);
+            delay(1000);
 
-           if(ts == key_timeout) {
-               stopTimer = true;
-               pin_code = "";
-               hidden_pin = "";
-               displayLcd("Sorry to slow",0);
-               sleep(2);
-               displayLcd("Welcome!", 0);
-           }
+            if(ts == key_timeout) {
+                stopTimer = true;
+                displayLcd("Sorry to slow", 0);
+                delay(2000);
+                setToIdle();
+            }
         }
-        ts = 0;
     }
 }
 
+// test
+int user1;
+int user2;
+
+void drawerMon() {
+    while(true) {
+        switch(mcpReadPin()) {
+            case 0x02:
+                     if(user1 == 1) {
+                         if(user2 == 1)
+                            mcpOutPin(A1);
+                        else
+                            mcpOutPin(0);
+                     }
+                     user1 = 0;
+                     break;
+            case 0x01:
+                     if(user2 == 1) {
+                         if(user1 ==1)
+                             mcpOutPin(A0);
+                         else
+                             mcpOutPin(0);
+                     }
+                     user2 = 0;
+                     break;
+        }
+    }
+}
 
 int main() {
     Config config;
@@ -62,6 +91,10 @@ int main() {
     displayLcd("Welcome!", 0);
 
     thread th(keyTimeout);
+    thread th2(drawerMon);
+
+    piOutPin(LOW);
+    mcpOutPin(0);
 
     while(true) {
         read(input, &ev, sizeof(ev));
@@ -69,9 +102,6 @@ int main() {
         if(ev.type == 1 && ev.value == 1) {
             stopTimer = false;
             ts = 0;
-
-            outputPinLow();
-            i2cOutPinLow();
 
             // DEL or BACKSPACE
             if(ev.code == 111 || ev.code == 14) {
@@ -86,6 +116,7 @@ int main() {
                     }
                 }
             }
+
             // ENTER
             else if(ev.code == 28) {
                 string auth = checkPassCode(pin_code);
@@ -93,22 +124,33 @@ int main() {
                     displayLcd(auth, 1);
                     attempts = 0;
 
-                    outputPinHigh();
-                    i2cOutPinHigh();
                     stopTimer = true;
                     ts = 0;
 
-                    // Box open
-                    sleep(0.5);
-                    while(i2cInput() != 0) {
-                        // Do nothing
+                    // Box open not ideal
+                    // for test only
+                    switch(stoi(pin_code)) {
+                        case 1234: user1 = 1; break;
+                        case 5678: user2 = 1; break;
                     }
 
-                    outputPinLow();
-                    i2cOutPinLow();
-                    pin_code = "";
-                    hidden_pin = "";
-                    displayLcd("Welcome", 0);
+                    if(user1 == 1) {
+                        if(user2 == 1)
+                            mcpOutPin(A1 + A0);
+                        else
+                            mcpOutPin(A0);
+                    }
+
+                    if(user2 == 1) {
+                        if(user1 == 1)
+                            mcpOutPin(A1 + A0);
+                        else
+                            mcpOutPin(A1);
+                    }
+
+
+                    delay(1000);
+                    setToIdle();
                 }
                 else {
                     displayLcd(auth, 1);
@@ -117,17 +159,19 @@ int main() {
                     stopTimer = true;
                     ts = 0;
 
-                    outputPinLow();
-                    i2cOutPinLow();
+//                    outputPin(LOW);
+//                    i2cOutPin(0);
+
+                    delay(1000);
+                    setToIdle();
                 }
-                pin_code = "";
-                hidden_pin = "";
             }
+
             else {
                 pin_code += to_string(keypadValue(ev.code));
                     if(config.hide_char) {
-                       hidden_pin += config.hidden_char;
-                       displayLcd(hidden_pin, 0);
+                        hidden_pin += config.hidden_char;
+                        displayLcd(hidden_pin, 0);
                     }
                     else
                         displayLcd(pin_code, 0);

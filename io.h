@@ -1,5 +1,5 @@
-#ifndef DISPLAY_LCD_H
-#define DISPLAY_LCD_H
+#ifndef DISPLAY_IO_H
+#define DISPLAY_IO_H
 
 // 2x16 LCD
 //USE WIRINGPI PIN NUMBERS                                Board Pin
@@ -16,17 +16,16 @@ using namespace std;
 void displayLcd(string s, int row);
 void GPIOInit();
 
+#define HIGH 1
+#define LOW  0
 //           WiringPi     Board
 // Led Pin = 29           40
 #define LED  29
 
-void outputPinHigh();
-void outputPinLow();
+void piOutPin(int state);
+void piBlink();
 
 // I2C mcp23017
-#define I2C_AOUT 0x14
-#define I2C_BIN 0x13
-
 #define A0 0x01
 #define A1 0x02
 #define A2 0x04
@@ -45,9 +44,7 @@ void outputPinLow();
 #define B6 0x30
 #define B7 0x40
 
-void i2cOutPinHigh();
-void i2cOutPinLow();
-
-int i2cInput();
+void mcpOutPin(int pin);
+int mcpReadPin();
 
 #endif

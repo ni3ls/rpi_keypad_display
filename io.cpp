@@ -1,11 +1,8 @@
-#include <iostream>
-#include <string>
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 #include <mcp23x0817.h>
 #include <lcd.h>
-#include "GPIO.h"
-using namespace std;
+#include "io.h"
 
 int lcd;
 int fd;
@@ -17,8 +14,11 @@ void GPIOInit() {
     fd = wiringPiI2CSetupInterface("/dev/i2c-0", 0x20);
     // A0-A7 output
     wiringPiI2CWriteReg8(fd, MCP23x17_IODIRA, 0x00);
-    // B0 input
-    wiringPiI2CWriteReg8 (fd, MCP23x17_IODIRB, 0x01) ;
+
+    // Enable B0,B1 Pullup replace 0x01 with 0xFF for all PortB
+    wiringPiI2CWriteReg8 (fd, MCP23x17_GPPUB, B0 + B1) ;
+    // B0,B1 input
+    wiringPiI2CWriteReg8 (fd, MCP23x17_IODIRB, B0 + B1) ;
 }
 
 void displayLcd(string s, int row) {
@@ -28,24 +28,26 @@ void displayLcd(string s, int row) {
     lcdPrintf(lcd, "%s", s.c_str());
 }
 
-void outputPinHigh() {
+void piBlink() {
+    while(true) {
+        piOutPin(HIGH);
+        delay(500);
+        piOutPin(LOW);
+        delay(500);
+    }
+}
+
+// HIGH or LOW
+void piOutPin(int state) {
     pinMode (LED, OUTPUT);
-    digitalWrite(LED, HIGH);
+    digitalWrite(LED, state);
 }
 
-void outputPinLow() {
-    pinMode (LED, OUTPUT);
-    digitalWrite(LED, LOW);
+void mcpOutPin(int pin) {
+    wiringPiI2CWriteReg8(fd, MCP23x17_OLATA, pin);
 }
 
-void i2cOutPinHigh() {
-    wiringPiI2CWriteReg8(fd, I2C_AOUT, A0);
+int mcpReadPin() {
+    return wiringPiI2CReadReg8 (fd, MCP23x17_GPIOB);
 }
 
-void i2cOutPinLow() {
-    wiringPiI2CWriteReg8(fd, I2C_AOUT, 0x00);
-}
-
-int i2cInput() {
-    return wiringPiI2CReadReg8 (fd, I2C_BIN);
-}

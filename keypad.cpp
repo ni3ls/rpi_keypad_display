@@ -16,3 +16,9 @@ int keypadValue(int key_code) {
         }
     return ch;
 }
+
+vector<char> keypadDel(vector<char> &a) {
+    a.pop_back();
+    return a;
+}
+

@@ -1,4 +1,3 @@
-#include <string>
 #include <sqlite3.h>
 #include "config.h"
 using namespace std;
