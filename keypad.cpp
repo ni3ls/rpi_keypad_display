@@ -1,4 +1,28 @@
 #include "keypad.h"
+#include <linux/input.h>
+#include <cstdio>
+#include <fcntl.h>
+#include <unistd.h>
+#include <iostream>
+using namespace std;
+
+NUMPAD::NUMPAD() {
+    char data[] = KEYPAD;
+    input = open(data, O_RDONLY);
+}
+
+void NUMPAD::readNumpad() {
+    read(input, &ev, sizeof(ev));
+}
+
+int NUMPAD::getNumpad() {
+    if(ev.type == 1 && ev.value == 1) {
+        if(ev.code >= 2 && ev.code <= 11)
+            cout << ev.code << endl;
+
+    }
+
+}
 
 int keypadValue(int key_code) {
     int ch;
@@ -15,10 +39,5 @@ int keypadValue(int key_code) {
         case 11: ch = 0; break;
         }
     return ch;
-}
-
-vector<char> keypadDel(vector<char> &a) {
-    a.pop_back();
-    return a;
 }
 

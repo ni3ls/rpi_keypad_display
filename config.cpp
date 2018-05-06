@@ -35,4 +35,3 @@ void loadConfig(Config& config) {
             data >> config.key_pause;
     }
 }
-
