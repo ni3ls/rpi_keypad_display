@@ -32,12 +32,23 @@ IO::~IO() {
     piLed(LOW);
 }
 
-void IO::welcomeMsg() {
-    displayLcd("Welcome!",0);
+void IO::cursorBlink(int state) {
+    switch(state) {
+        case 0:
+              lcdCursor(lcd, 0);
+              lcdCursorBlink(lcd, 0);
+              break;
+        case 1:
+              lcdCursor(lcd, 1);
+              lcdCursorBlink(lcd, 1);
+              break;
+    }
 }
 
 void IO::displayLcd(string s, int row) {
     lcdClear(lcd);
+//    lcdCursor(lcd, 1);
+//    lcdCursorBlink(lcd, 1);
     column = ((16 - s.length()) / 2);
     lcdPosition(lcd, column, row);
     lcdPrintf(lcd, "%s", s.c_str());

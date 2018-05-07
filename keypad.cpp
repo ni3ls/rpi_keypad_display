@@ -1,8 +1,7 @@
 #include "keypad.h"
-#include <linux/input.h>
-#include <cstdio>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string>
 #include <iostream>
 using namespace std;
 
@@ -11,33 +10,48 @@ NUMPAD::NUMPAD() {
     input = open(data, O_RDONLY);
 }
 
+void NUMPAD::setHidden(const char* s, int h) {
+    hide = h;
+    hidden_char = s;
+}
+
 void NUMPAD::readNumpad() {
     read(input, &ev, sizeof(ev));
-}
 
-int NUMPAD::getNumpad() {
     if(ev.type == 1 && ev.value == 1) {
-        if(ev.code >= 2 && ev.code <= 11)
-            cout << ev.code << endl;
+        // Enter key
+        ch = (ev.code == 28) ? 1 : 0;
 
+        if(ev.code >= 2 && ev.code <= 11) {
+            if(ev.code == 11)
+                key_value += "0";
+            else
+                key_value += to_string(ev.code - 1);
+
+            if(hide == 1)
+                hidden_value += hidden_char;
+        }
+
+        // DEL or BACKSPACE
+        if(ev.code == 111 || ev.code == 14) {
+            if(key_value.length() > 0) {
+                key_value.resize(key_value.length() - 1);
+
+               if(hide == 1)
+                   hidden_value.resize(hidden_value.length() - 1);
+            }
+        }
     }
-
 }
 
-int keypadValue(int key_code) {
-    int ch;
-    switch(key_code) {
-        case 2: ch = 1; break;
-        case 3: ch = 2; break;
-        case 4: ch = 3; break;
-        case 5: ch = 4; break;
-        case 6: ch = 5; break;
-        case 7: ch = 6; break;
-        case 8: ch = 7; break;
-        case 9: ch = 8; break;
-        case 10: ch = 9; break;
-        case 11: ch = 0; break;
-        }
+int NUMPAD::isEnterKey() {
     return ch;
 }
 
+string NUMPAD::getHiddenNumpad() {
+    return hidden_value;
+}
+
+string NUMPAD::getNumpad() {
+    return key_value;
+}

@@ -11,14 +11,20 @@ using namespace std;
 class NUMPAD {
     public:
         void readNumpad();
-        int getNumpad();
+        void setHidden(const char* s, int hide);
+        string getNumpad();
+        string getHiddenNumpad();
+        int isEnterKey();
         NUMPAD();
 
     private:
         string key_value;
-        int input;
+        string hidden_value;
+        string hidden_char;
+        int hide;
         int ch;
-        input_event ev;
+        int input;
+        struct input_event ev;
 };
 
 #endif

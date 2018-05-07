@@ -25,12 +25,12 @@ using namespace std;
 
 class IO {
     public:
-        void welcomeMsg();
         void displayLcd(string s, int row);
         void piBlink();
         void piLed(int state);
         void setMcpAx(int pin, int state);
         void mcpReset();
+        void cursorBlink(int state);
         int getMcpBx();
         IO();
         ~IO();
