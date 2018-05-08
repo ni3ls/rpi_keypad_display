@@ -1,26 +1,23 @@
 #include <iostream>
-#include <unistd.h>
+#include <string>
 #include "io.h"
 #include "keypad.h"
-#include <thread>
+#include <unistd.h>
 using namespace std;
 
-
 int main() {
-    cout << A0 << endl;
-    cout << B7 << endl;
-    IO pi3_io;
 
+    IO pi_io;
+    pi_io.displayLcd("Welcome!", 0);
 
-    NUMPAD numpad;
-        pi3_io.displayLcd("Welcome!", 0);
+    Numpad numP;
+//    numP.setHiddenChar("*");
+    numP.start();
+
     while(true) {
-        numpad.setHidden("*", 1);
-        numpad.readNumpad();
-        pi3_io.displayLcd(numpad.getHiddenNumpad(), 0);
-
-        if(numpad.isEnterKey() == 1)
-            cout << numpad.getNumpad() << endl;
+        numP.readNumpad();
     }
+
+
     return 0;
 }

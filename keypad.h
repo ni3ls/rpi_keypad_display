@@ -6,25 +6,34 @@
 
 #include <string>
 #include <linux/input.h>
+#include <thread>
+#include <iostream>
+#include <unistd.h>
 using namespace std;
 
-class NUMPAD {
+class Numpad {
     public:
         void readNumpad();
-        void setHidden(const char* s, int hide);
-        string getNumpad();
-        string getHiddenNumpad();
-        int isEnterKey();
-        NUMPAD();
+        void setHiddenChar(string x);
+        bool isEnter();
+        Numpad();
+        void start() { tmr = thread(&Numpad::xTimer, this); }
 
     private:
+        bool ent;
         string key_value;
         string hidden_value;
         string hidden_char;
-        int hide;
-        int ch;
         int input;
         struct input_event ev;
+        void xTimer() const {
+            int x = 0;
+            while(true) {
+                ++x;
+                cout << x << endl;
+                sleep(1);
+            }
+        }
+        thread tmr;
 };
-
 #endif

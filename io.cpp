@@ -1,8 +1,10 @@
+#include <string>
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 #include <mcp23x0817.h>
 #include <lcd.h>
 #include "io.h"
+using namespace std;
 
 // 2x16 LCD
 //USE WIRINGPI PIN NUMBERS                                Board Pin
@@ -47,8 +49,6 @@ void IO::cursorBlink(int state) {
 
 void IO::displayLcd(string s, int row) {
     lcdClear(lcd);
-//    lcdCursor(lcd, 1);
-//    lcdCursorBlink(lcd, 1);
     column = ((16 - s.length()) / 2);
     lcdPosition(lcd, column, row);
     lcdPrintf(lcd, "%s", s.c_str());
