@@ -7,7 +7,8 @@ using namespace std;
 class VerifyPCode {
     public:
         VerifyPCode();
-        string verifyPCode(string pincode);
+        ~VerifyPCode() {}
+        string verifyPCode(const string &pincode);
 
     private:
         string pStat;

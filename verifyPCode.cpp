@@ -11,7 +11,7 @@ IO pi_IO;
 VerifyPCode::VerifyPCode() {
 }
 
-string VerifyPCode::verifyPCode(string pinCode) {
+string VerifyPCode::verifyPCode(const string &pinCode) {
     Config config;
     loadConfig(config);
     sqlite3 *db;

@@ -5,19 +5,21 @@
 #define KEYPAD "/dev/input/event0"
 
 #include <string>
-#include <iostream>
 #include <linux/input.h>
 #include <thread>
 #include <wiringPi.h>
+#include <iostream>
 using namespace std;
 
 class Numpad {
     public:
         Numpad();
+        ~Numpad() {}
         void readNumpad();
         void setHiddenChar(const string &x, const bool &hide);
         void enterPinAgain();
         void start() { tmr = thread(&Numpad::xTimer, this); }
+        void startDetectPin() { detect = thread(&Numpad::dTimer, this); }
 
     private:
         string key_value;
@@ -25,6 +27,7 @@ class Numpad {
         string hidden_char;
         int _input;
         int _ts;
+        int _xpin;
         int _blockNumpad;
         bool _stopTimer;
         bool _isHidden;
@@ -32,6 +35,7 @@ class Numpad {
         struct input_event ev;
         void setIdle();
         void timeOut();
+        void A0pin();
         void xTimer() {
             while(true) {
                 while(!_stopTimer) {
@@ -47,5 +51,11 @@ class Numpad {
             }
         }
         thread tmr;
+        void dTimer() {
+            while(true) {
+                A0pin();
+            }
+        }
+        thread detect;
 };
 #endif
