@@ -18,6 +18,7 @@ Numpad::Numpad() {
     _stopTimer = true;
     _ts = 1;
     _blockNumpad = 0;
+    _attempts = 0;
     _isHidden = false;
     hidden_char = "*"; // default
     piIO.mcpReset();
@@ -61,13 +62,21 @@ void Numpad::readNumpad() {
                 _isEnterKey = true;
                 // To-do  check PCode
                 if(vcode.verifyPCode(key_value) == "PIN ERROR") {
-                        delay(1500);
-                        key_value = "";
-                        piIO.cursorBlink(1);
-                        piIO.displayLcd("", 0);
-                        _stopTimer = false;
+                        ++_attempts;
+                        switch(_attempts) {
+                            case 3: attemptTimeout(); _attempts = 0; break;
+                            case 1 ... 2:
+                                delay(1500);
+                                key_value = "";
+                                hidden_value = "";
+                                piIO.cursorBlink(1);
+                                piIO.displayLcd("", 0);
+                                _stopTimer = false;
+                                break;
+                       }
                 }
                 else {
+                    _attempts = 0;
                     piIO.setMcpAx(A0, HIGH);
                     delay(1500);
                     setIdle();
@@ -78,6 +87,13 @@ void Numpad::readNumpad() {
             }
         }
     }
+}
+
+void Numpad::attemptTimeout() {
+    string atimeout = "Timeout " + to_string(conf.retention)  +  " secs";
+    piIO.displayLcd("To many attempts" + atimeout, 0);
+    sleep(conf.retention);
+    setIdle();
 }
 
 void Numpad::timeOut() {

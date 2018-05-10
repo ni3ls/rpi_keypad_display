@@ -28,12 +28,14 @@ class Numpad {
         int _input;
         int _ts;
         int _xpin;
+        int _attempts;
         int _blockNumpad;
         bool _stopTimer;
         bool _isHidden;
         bool _isEnterKey;
         struct input_event ev;
         void setIdle();
+        void attemptTimeout();
         void timeOut();
         void A0pin();
         void xTimer() {
