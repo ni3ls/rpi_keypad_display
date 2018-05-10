@@ -5,8 +5,10 @@
 #include <cstdio>
 #include "io.h"
 #include "verifyPCode.h"
+#include "config.h"
 using namespace std;
 
+Config conf;
 IO piIO;
 VerifyPCode vcode;
 
@@ -17,10 +19,11 @@ Numpad::Numpad() {
     _ts = 1;
     _blockNumpad = 0;
     _isHidden = false;
-    hidden_char = "*";
+    hidden_char = "*"; // default
     piIO.mcpReset();
     piIO.piLed(LOW);
     piIO.start();
+    loadConfig(conf);
 }
 
 void Numpad::readNumpad() {
@@ -92,8 +95,8 @@ void Numpad::setIdle() {
     hidden_value = "";
 }
 
-void Numpad::setHiddenChar(const string &x, const bool &hide) {
-    hidden_char = x;
+void Numpad::setHiddenChar(const bool &hide) {
+    hidden_char = conf.hidden_char;
     _isHidden = hide;
 }
 

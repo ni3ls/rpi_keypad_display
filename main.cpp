@@ -11,7 +11,7 @@ int main() {
     pi_io.displayLcd("Welcome!", 0);
 
     Numpad numP;
-//    numP.setHiddenChar("*", true); // To set hidden char
+    numP.setHiddenChar(true); // To set hidden char
     numP.start(); // Start timer thread
     numP.startDetectPin(); // Start dTimer thread
 

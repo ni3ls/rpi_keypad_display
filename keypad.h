@@ -16,7 +16,7 @@ class Numpad {
         Numpad();
         ~Numpad() {}
         void readNumpad();
-        void setHiddenChar(const string &x, const bool &hide);
+        void setHiddenChar(const bool &hide);
         void enterPinAgain();
         void start() { tmr = thread(&Numpad::xTimer, this); }
         void startDetectPin() { detect = thread(&Numpad::dTimer, this); }
