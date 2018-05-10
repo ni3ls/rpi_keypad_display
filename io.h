@@ -25,21 +25,14 @@ using namespace std;
 
 class IO {
     public:
-        void displayLcd(string s, int row);
-        void piBlink();
-        void piLed(int state);
-        void setMcpAx(int pin, int state);
-        void mcpReset();
-        void cursorBlink(int state);
-        int getMcpBx();
+        void displayLcd(const string &s, const int &row);
+        void cursorBlink(bool blink);
         IO();
-        ~IO();
 
     private:
-        int fd;
-        int lcd;
-        int column;
-        int mcp_pin;
+        int _fd;
+        int _lcd;
+        int _column;
 };
 
 #endif
