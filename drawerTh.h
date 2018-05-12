@@ -15,41 +15,73 @@ class DrawerTh {
     public:
         DrawerTh() { _isLeft = false; }
         ~DrawerTh() {}
-        void startDrawerThread(int pin) {
+        void startDrawerX(int pin) {
             _pin = pin;
             pi_io.setMcpAx(pin, HIGH);
         }
-        void startDrawerTimer() { drawerTh = thread(&DrawerTh::dTh, this); }
+        void startDrawerA0Timer() { drawerThA0 = thread(&DrawerTh::dThA0, this); }
+        void startDrawerA1Timer() { drawerThA1 = thread(&DrawerTh::dThA1, this); }
 
     private:
-        thread drawerTh;
+        thread drawerThA0;
+        thread drawerThA1;
         int _pin;
         bool _isLeft;
         int dTimer;
-        void dTh() {
+        void dThA0() {
             while(true) {
                 switch(_pin) {
                     case 1:
                          _isLeft = false;
                          while(!_isLeft) {
                              dTimer += 1;
-                             if(pi_io.getMcpBx() == 2) {
+                             if(pi_io.getMcpBx() == 2 && _pin == 1) {
                                  _isLeft = true;
-                                 if(_pin == 1 && _isLeft == 1) {
-                                     pi_io.setMcpAx(A0, LOW);
-                                     _pin = 0;
-                                 }
-                                 cout << "isLeft: " << _isLeft << endl;
+                                 pi_io.setMcpAx(A0, LOW);
+                                 _pin = 0;
                                  dTimer = 0;
                              }
                              cout << "Test thread" << dTimer << endl;
                              cout << "mcp: " << pi_io.getMcpBx() << endl;
-                             delay(500);
-                             if(dTimer == 10) {
+                             delay(250);
+                             if(dTimer == 20) {
                                  while(!_isLeft) {
                                      if(pi_io.getMcpBx() == 2 && _pin == 1) {
                                          _isLeft = true;
                                          pi_io.setMcpAx(A0, LOW);
+                                         _pin = 0;
+                                         dTimer = 0;
+                                     }
+                                     pi_io.piBlink();
+                                 }
+                                 pi_io.piLed(LOW);
+                             }
+                         }
+                         break;
+                }
+            }
+        }
+        void dThA1() {
+            while(true) {
+                switch(_pin) {
+                    case 2:
+                         _isLeft = false;
+                         while(!_isLeft) {
+                             dTimer += 1;
+                             if(pi_io.getMcpBx() == 1 && _pin == 2) {
+                                 _isLeft = true;
+                                 pi_io.setMcpAx(A1, LOW);
+                                 _pin = 0;
+                                 dTimer = 0;
+                             }
+                             cout << "Test thread" << dTimer << endl;
+                             cout << "mcp: " << pi_io.getMcpBx() << endl;
+                             delay(250);
+                             if(dTimer == 20) {
+                                 while(!_isLeft) {
+                                     if(pi_io.getMcpBx() == 1 && _pin == 2) {
+                                         _isLeft = true;
+                                         pi_io.setMcpAx(A1, LOW);
                                          _pin = 0;
                                          dTimer = 0;
                                      }

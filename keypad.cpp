@@ -27,7 +27,8 @@ Numpad::Numpad() {
 //    piIO.start();
     loadConfig(conf);
     _tsConf = conf.key_pause;
-    drawer.startDrawerTimer();
+    drawer.startDrawerA0Timer();
+    drawer.startDrawerA1Timer();
 }
 
 void Numpad::readNumpad() {
@@ -82,9 +83,9 @@ void Numpad::readNumpad() {
                     _attempts = 0;
                     switch(stoi(key_value)) {
                         case 1234: //piIO.setMcpAx(A0, HIGH);
-                                   drawer.startDrawerThread(A0); break;
-//                        case 5678: piIO.setMcpAx(A1, HIGH);
-//                                   drawer.startDrawerThread(A1); break;
+                                   drawer.startDrawerX(A0); break;
+                        case 5678: //piIO.setMcpAx(A1, HIGH);
+                                   drawer.startDrawerX(A1); break;
                     }
 
                     delay(1500);
