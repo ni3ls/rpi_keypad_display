@@ -38,13 +38,9 @@ IO::IO() {
 
 void IO::piBlink() {
     piLed(HIGH);
-    delay(1000);
+    delay(250);
     piLed(LOW);
-    delay(1000);
-    piLed(HIGH);
-    delay(1000);
-    piLed(LOW);
-    delay(1000);
+    delay(250);
 }
 
 void IO::piLed(const bool &isHigh) {

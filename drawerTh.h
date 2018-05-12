@@ -45,6 +45,18 @@ class DrawerTh {
                              cout << "Test thread" << dTimer << endl;
                              cout << "mcp: " << pi_io.getMcpBx() << endl;
                              delay(500);
+                             if(dTimer == 10) {
+                                 while(!_isLeft) {
+                                     if(pi_io.getMcpBx() == 2 && _pin == 1) {
+                                         _isLeft = true;
+                                         pi_io.setMcpAx(A0, LOW);
+                                         _pin = 0;
+                                         dTimer = 0;
+                                     }
+                                     pi_io.piBlink();
+                                 }
+                                 pi_io.piLed(LOW);
+                             }
                          }
                          break;
                 }
