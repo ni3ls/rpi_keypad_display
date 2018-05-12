@@ -14,11 +14,11 @@ using namespace std;
 class Numpad {
     public:
         Numpad();
-        ~Numpad() {}
+        ~Numpad() { tmr.join(); }
         void readNumpad();
         void setHiddenChar(const bool &hide);
         void enterPinAgain();
-        void start() { tmr = thread(&Numpad::xTimer, this); }
+        void start() { tmr = thread(&Numpad::xTimer, this);  }
         void startDetectPin() { detect = thread(&Numpad::dTimer, this); }
 
     private:
@@ -27,6 +27,7 @@ class Numpad {
         string hidden_char;
         int _input;
         int _ts;
+        int _tsConf;
         int _xpin;
         int _attempts;
         int _blockNumpad;
@@ -44,8 +45,8 @@ class Numpad {
                     _ts += 1;;
                     delay(1000);
                     cout << _ts << endl;
-                    if(_ts == 5) {
-                        _ts = 1;
+                    if(_ts == _tsConf) {
+                        _ts = 0;
                         _stopTimer = true;
                         timeOut();
                     }

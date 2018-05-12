@@ -6,25 +6,28 @@
 #include "io.h"
 #include "verifyPCode.h"
 #include "config.h"
+#include "drawerTh.h"
 using namespace std;
 
 Config conf;
 IO piIO;
 VerifyPCode vcode;
+DrawerTh drawer;
 
 Numpad::Numpad() {
     char data[] = KEYPAD;
     _input = open(data, O_RDONLY);
     _stopTimer = true;
-    _ts = 1;
     _blockNumpad = 0;
     _attempts = 0;
     _isHidden = false;
     hidden_char = "*"; // default
     piIO.mcpReset();
     piIO.piLed(LOW);
-    piIO.start();
+//    piIO.start();
     loadConfig(conf);
+    _tsConf = conf.key_pause;
+    drawer.startDrawerTimer();
 }
 
 void Numpad::readNumpad() {
@@ -33,7 +36,7 @@ void Numpad::readNumpad() {
 
         if(ev.type == 1 && ev.value == 1) {
             _stopTimer = true;
-            _ts = 1;
+            _ts = 0;
             switch(ev.code) {
                 case 11:
                     key_value += "0";
@@ -58,7 +61,7 @@ void Numpad::readNumpad() {
 
             if(ev.code == 28 && key_value.length() > 0) {
                 _stopTimer = true;
-                _ts = 1;
+                _ts = 0;
                 _isEnterKey = true;
                 // To-do  check PCode
                 if(vcode.verifyPCode(key_value) == "PIN ERROR") {
@@ -77,12 +80,19 @@ void Numpad::readNumpad() {
                 }
                 else {
                     _attempts = 0;
-                    piIO.setMcpAx(A0, HIGH);
+                    switch(stoi(key_value)) {
+                        case 1234: //piIO.setMcpAx(A0, HIGH);
+                                   drawer.startDrawerThread(A0); break;
+//                        case 5678: piIO.setMcpAx(A1, HIGH);
+//                                   drawer.startDrawerThread(A1); break;
+                    }
+
                     delay(1500);
                     setIdle();
                     piIO.cursorBlink(0);
                     piIO.setxVal();
                     _xpin = 1;
+//                    drawer.startDrawerThread();
                 }
             }
         }

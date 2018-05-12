@@ -28,6 +28,11 @@ IO::IO() {
     // A0-A7 output
     wiringPiI2CWriteReg8(_fd, MCP23x17_IODIRA, 0x00);
 
+    // Enable B0,B1 Pullup replace 0x01 with 0xFF for all PortB
+    wiringPiI2CWriteReg8 (_fd, MCP23x17_GPPUB, B0 + B1) ;
+    // B0,B1 input
+    wiringPiI2CWriteReg8 (_fd, MCP23x17_IODIRB, B0 + B1) ;
+
     mcp_pin = 0;
 }
 
