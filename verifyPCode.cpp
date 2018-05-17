@@ -1,19 +1,18 @@
 #include <sqlite3.h>
 #include "verifyPCode.h"
 #include "config.h"
-#include <iostream>
 #include "io.h"
-
+#include <string>
 using namespace std;
 
 IO pi_IO;
 
-VerifyPCode::VerifyPCode() {
-}
+VerifyPCode::VerifyPCode() {}
 
-string VerifyPCode::verifyPCode(const string &pinCode) {
+string VerifyPCode::verifyPinCode(const string &pinCode) {
     Config config;
     loadConfig(config);
+
     sqlite3 *db;
     sqlite3_stmt *res;
 
@@ -23,7 +22,7 @@ string VerifyPCode::verifyPCode(const string &pinCode) {
     int step = sqlite3_step(res);
 
     if(step == SQLITE_ROW) {
-        pStat = "PIN OK";
+        pinStat = "PIN OK";
         pi_IO.displayLcd("PIN OK", 1);
 
         // Update datetime('now')
@@ -31,12 +30,12 @@ string VerifyPCode::verifyPCode(const string &pinCode) {
         step = sqlite3_step(res);
     }
     else {
-        pStat = "PIN ERROR";
+        pinStat = "PIN ERROR";
         pi_IO.displayLcd("PIN ERROR", 1);
     }
 
     sqlite3_finalize(res);
     sqlite3_close(db);
-    return pStat;
+    return pinStat;
 }
 

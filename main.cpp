@@ -1,25 +1,20 @@
 #include <iostream>
-#include <string>
-#include <unistd.h>
-#include "io.h"
 #include "keypad.h"
+#include <unistd.h>
+#include "config.h"
+#include <string>
 using namespace std;
 
 int main() {
+    Config conf;
+    loadConfig(conf);
 
-    IO pi_io;
-    pi_io.displayLcd("Welcome!", 0);
-
-    Numpad numP;
-    numP.setHiddenChar(true); // To set hidden char. false default
-    numP.start(); // Start timer thread
-//    numP.startDetectPin(); // Start dTimer thread
+    Keypad keyP(conf.retention);
+    keyP.startKeyTh();
+    keyP.sethideCode(conf.hide_char);
+    keyP.sethiddenChar(conf.hidden_char);
 
     while(true) {
-        numP.readNumpad();
-        sleep(0.5);
+        keyP.readKeypad();
     }
-
-
-    return 0;
 }

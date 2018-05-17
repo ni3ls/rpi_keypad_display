@@ -86,6 +86,3 @@ void IO::displayLcd(const string &s, const int &row) {
     lcdPrintf(_lcd, "%s", s.c_str());
 }
 
-void IO::setxVal() {
-    _xval = 1;
-}

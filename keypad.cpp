@@ -1,136 +1,139 @@
 #include "keypad.h"
-#include <fcntl.h>
 #include <unistd.h>
-#include <linux/input.h>
-#include <cstdio>
+#include <fcntl.h>
 #include "io.h"
+#include <string>
 #include "verifyPCode.h"
-#include "config.h"
-#include "drawerTh.h"
+#include "drawer.h"
 using namespace std;
 
-Config conf;
-IO piIO;
-VerifyPCode vcode;
-DrawerTh drawer;
+enum states {
+    IS_RESET = 0,
+    IS_READING,
+    IS_ENTER
+};
 
-Numpad::Numpad() {
-    char data[] = KEYPAD;
+IO pi_io;
+VerifyPCode vcode;
+Drawer drawer;
+
+Keypad::Keypad(int interval) {
+    _interval = interval;
+    _time = 0;
+    _isEnabled = false;
+    char data[] = KEY_PAD;
     _input = open(data, O_RDONLY);
-    _stopTimer = true;
-    _blockNumpad = 0;
-    _attempts = 0;
+    _state = IS_RESET;
+    hidden_ch = "*";
     _isHidden = false;
-    hidden_char = "*"; // default
-    piIO.mcpReset();
-    piIO.piLed(LOW);
-//    piIO.start();
-    loadConfig(conf);
-    _tsConf = conf.key_pause;
-    drawer.startDrawerA0Timer();
-    drawer.startDrawerA1Timer();
+    _attempts = 0;
+    drawer.startDrawerTh();
 }
 
-void Numpad::readNumpad() {
-    if(_blockNumpad == 0) {
-        read(_input, &ev, sizeof(ev));
-
-        if(ev.type == 1 && ev.value == 1) {
-            _stopTimer = true;
-            _ts = 0;
-            switch(ev.code) {
-                case 11:
-                    key_value += "0";
-                    hidden_value += hidden_char;
-                    break;
-                case 2 ... 10: // 1-9
-                    key_value += to_string(ev.code -1);
-                    hidden_value += hidden_char;
-                    break;
-                case 111: case 14: // Del Backspace
-                    if(key_value.length() > 0) {
-                        key_value.resize(key_value.length() - 1);
-                        hidden_value.resize(hidden_value.length() - 1);
-                    }
-                    break;
+void Keypad::readKeypad() {
+    switch(_state) {
+        case IS_RESET: reset(); _state = IS_READING; break;
+        case IS_READING:
+             read(_input, &ev, sizeof(ev));
+            if(ev.type == 1 && ev.value == 1) {
+                timerStop(); _time = 0;
+                switch(ev.code) {
+                    case 11: key_val += "0"; hidden_val += hidden_ch;
+                        _state = IS_READING; break;
+                    case 2 ... 10: // 1-9
+                        key_val += to_string(ev.code -1); hidden_val += hidden_ch;
+                        _state = IS_READING; break;
+                    case 111: case 14: // Del Backspace
+                        if(key_val.length() > 0) {
+                            key_val.resize(key_val.length() - 1);
+                            hidden_val.resize(hidden_val.length() - 1);
+                        }
+                        _state = IS_READING; break;
+                    case 28: _state = IS_ENTER; break;
+                }
+                (key_val.length() == 0) ? pi_io.cursorBlink(1)
+                    : pi_io.cursorBlink(0);
+                pi_io.displayLcd((_isHidden == false) ? key_val : hidden_val, 0);
+                (_state == IS_ENTER) ? timerStop() : timerStart();
             }
-            _stopTimer = false;
-
-            (key_value.length() == 0) ? piIO.cursorBlink(1) 
-            : piIO.cursorBlink(0);
-            piIO.displayLcd((_isHidden == false) ? key_value : hidden_value , 0);
-
-            if(ev.code == 28 && key_value.length() > 0) {
-                _stopTimer = true;
-                _ts = 0;
-                _isEnterKey = true;
-                // To-do  check PCode
-                if(vcode.verifyPCode(key_value) == "PIN ERROR") {
-                        ++_attempts;
-                        switch(_attempts) {
-                            case 3: attemptTimeout(); _attempts = 0; break;
-                            case 1 ... 2:
-                                delay(1500);
-                                key_value = "";
-                                hidden_value = "";
-                                piIO.cursorBlink(1);
-                                piIO.displayLcd("", 0);
-                                _stopTimer = false;
-                                break;
-                       }
+            break;
+        case IS_ENTER:
+            if(key_val.length() > 0) {
+                if(vcode.verifyPinCode(key_val) == "PIN ERROR") {
+                    _attempts++;
+                    switch(_attempts) {
+                        case 3: attemptTimeout(); _attempts = 0;
+                             _state = IS_RESET; break;
+                        case 1 ... 2: sleep(2); key_val = "";
+                             hidden_val = ""; pi_io.cursorBlink(1);
+                             pi_io.displayLcd("", 0); timerStart();
+                             _state = IS_READING; break;
+                    }
                 }
                 else {
                     _attempts = 0;
-                    switch(stoi(key_value)) {
-                        case 1234: //piIO.setMcpAx(A0, HIGH);
-                                   drawer.startDrawerX(A0); break;
-                        case 5678: //piIO.setMcpAx(A1, HIGH);
-                                   drawer.startDrawerX(A1); break;
+                    switch(stoi(key_val)) {
+                        case 1234: drawer.openDrawer(A0); break;
+                        case 5678: drawer.openDrawer(A1); break;
                     }
-
-                    delay(1500);
-                    setIdle();
-                    piIO.cursorBlink(0);
-                    piIO.setxVal();
-                    _xpin = 1;
-//                    drawer.startDrawerThread();
+                    sleep(2); _state = IS_RESET;
                 }
             }
-        }
+            break;
     }
+
 }
 
-void Numpad::attemptTimeout() {
-    string atimeout = "Timeout " + to_string(conf.retention)  +  " secs";
-    piIO.displayLcd("To many attempts" + atimeout, 0);
-    sleep(conf.retention);
-    setIdle();
+void Keypad::attemptTimeout() {
+    string atimeout = "Timeout " + to_string(_interval)  +  " secs";
+    pi_io.displayLcd("To many attempts" + atimeout, 0);
+    sleep(_interval); reset();
 }
 
-void Numpad::timeOut() {
-    _blockNumpad = 1;
-    piIO.cursorBlink(0);
-    piIO.displayLcd("Sorry too slow", 0);
-    delay(2000);
-    setIdle();
+void Keypad::keyTimeout() {
+    pi_io.cursorBlink(0);
+    pi_io.displayLcd("Sorry too slow", 0);
+    sleep(2); reset();
 }
 
-void Numpad::setIdle() {
-    piIO.displayLcd("Welcome!", 0);
-    _blockNumpad = 0;
-    key_value = "";
-    hidden_value = "";
+void Keypad::reset() {
+    key_val = "";
+    hidden_val = "";
+    pi_io.displayLcd("Welcome!", 0);
 }
 
-void Numpad::setHiddenChar(const bool &hide) {
-    hidden_char = conf.hidden_char;
-    _isHidden = hide;
+void Keypad::startKeyTh() {
+    _tkeypad = thread(&Keypad::timerKeyTh, this);
 }
 
-// testing
-void Numpad::A0pin() {
-    if(piIO.getMcpBx() == 1 && _xpin == 1) {
-        piIO.setMcpAx(A0, LOW);
-        _xpin = 0;
+void Keypad::timerStart() {
+    _isEnabled = true;
+}
+
+void Keypad::timerStop() {
+    _isEnabled = false;
+}
+
+void Keypad::sethideCode(bool isHidden) {
+    _isHidden = isHidden;
+}
+
+void Keypad::sethiddenChar(string s) {
+    hidden_ch = s;
+}
+
+void Keypad::timerKeyTh() {
+    while(true) {
+        switch(_isEnabled) {
+            case 0: usleep(500); _time = 0; break;
+            case 1: _time++;
+                 if(_time == _interval) {
+                     _isEnabled = false; _time = 0;
+                     keyTimeout();
+                 }
+                 else
+                     sleep(1);
+                 break;
+        }
     }
 }

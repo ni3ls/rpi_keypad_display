@@ -2,13 +2,12 @@
 #define CONFIG_H
 
 #include <string>
-using namespace std;
 
 struct Config {
-    string database;
-    string tableDb;
+    std::string database;
+    std::string tableDb;
     bool hide_char;
-    char hidden_char;
+    std::string hidden_char;
     int retention;
     int attempts;
     int max_digits;

@@ -21,40 +21,23 @@
 #define B7 128
 
 #include <string>
-#include <thread>
-#include <iostream>
-#include <unistd.h>
-using namespace std;
 
 class IO {
     public:
         IO();
-        ~IO() {}
-        void displayLcd(const string &s, const int &row);
+        void displayLcd(const std::string &s, const int &row);
         void cursorBlink(bool blink);
         void piBlink();
         void piLed(const bool &isHigh);
         void setMcpAx(const int &pin, const bool &isHigh);
         void mcpReset();
         int getMcpBx();
-        void start() { tmr2 = thread(&IO::mcpTimer, this); }
-        void setxVal();
 
     private:
         int _fd;
         int _lcd;
         int _column;
         int mcp_pin;
-        int _xval;
-        void mcpTimer() {
-            while(true) {
-                if(_xval == 1) {
-                    piBlink();
-                    _xval = 0;
-                }
-            }
-        }
-        thread tmr2;
 };
 
 #endif

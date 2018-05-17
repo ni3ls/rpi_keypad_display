@@ -2,16 +2,14 @@
 #define VERIFY_PCODE_H
 
 #include <string>
-using namespace std;
 
 class VerifyPCode {
     public:
         VerifyPCode();
-        ~VerifyPCode() {}
-        string verifyPCode(const string &pincode);
+        std::string verifyPinCode(const std::string &pincode);
 
     private:
-        string pStat;
+        std::string pinStat;
 };
 
 #endif

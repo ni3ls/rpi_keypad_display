@@ -2,63 +2,39 @@
 #define KEYPAD_H
 
 // /dev/input : linux/input.h
-#define KEYPAD "/dev/input/event0"
+#define KEY_PAD "/dev/input/event0"
 
-#include <string>
-#include <linux/input.h>
 #include <thread>
-#include <wiringPi.h>
-#include <iostream>
-using namespace std;
+#include <linux/input.h>
+#include <string>
 
-class Numpad {
+class Keypad {
     public:
-        Numpad();
-        ~Numpad() { tmr.join(); }
-        void readNumpad();
-        void setHiddenChar(const bool &hide);
-        void enterPinAgain();
-        void start() { tmr = thread(&Numpad::xTimer, this);  }
-        void startDetectPin() { detect = thread(&Numpad::dTimer, this); }
+        Keypad(int interval);
+        void timerStop();
+        void timerStart();
+        void startKeyTh();
+        void readKeypad();
+        void sethideCode(bool isHidden);
+        void sethiddenChar(std::string s);
 
     private:
-        string key_value;
-        string hidden_value;
-        string hidden_char;
-        int _input;
-        int _ts;
-        int _tsConf;
-        int _xpin;
-        int _attempts;
-        int _blockNumpad;
-        bool _stopTimer;
+        std::thread _tkeypad;
+        int _interval;
+        int _time;
+        bool _isEnabled;
         bool _isHidden;
-        bool _isEnterKey;
-        struct input_event ev;
-        void setIdle();
+        void timerKeyTh();
+        void reset();
+        void keyTimeout();
         void attemptTimeout();
-        void timeOut();
-        void A0pin();
-        void xTimer() {
-            while(true) {
-                while(!_stopTimer) {
-                    _ts += 1;;
-                    delay(1000);
-                    cout << _ts << endl;
-                    if(_ts == _tsConf) {
-                        _ts = 0;
-                        _stopTimer = true;
-                        timeOut();
-                    }
-                }
-            }
-        }
-        thread tmr;
-        void dTimer() {
-            while(true) {
-                A0pin();
-            }
-        }
-        thread detect;
+        int _input;
+        int _state;
+        struct input_event ev;
+        std::string key_val;
+        std::string hidden_val;
+        std::string hidden_ch;
+        int _attempts;
 };
+
 #endif
