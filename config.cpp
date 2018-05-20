@@ -33,5 +33,11 @@ void loadConfig(Config& config) {
 
         if(line.find("KEY_PAUSE") != -1)
             data >> config.key_pause;
+
+        if(line.find("DRAWER_OPEN_TIME") != -1)
+            data >> config.drawer_open_time;
+
+        if(line.find("DRAWER_OPEN_ERR_TIME") != -1)
+            data >> config.drawer_open_err_time;
     }
 }

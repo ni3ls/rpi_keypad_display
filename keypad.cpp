@@ -28,6 +28,7 @@ Keypad::Keypad(int interval) {
     _isHidden = false;
     _attempts = 0;
     drawer.startDrawerTh();
+    pi_io.mcpReset();
 }
 
 void Keypad::readKeypad() {

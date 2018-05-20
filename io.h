@@ -32,6 +32,7 @@ class IO {
         void setMcpAx(const int &pin, const bool &isHigh);
         void mcpReset();
         int getMcpBx();
+        int getMcpActivePin();
 
     private:
         int _fd;
